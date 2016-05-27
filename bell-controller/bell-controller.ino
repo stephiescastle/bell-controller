@@ -1,55 +1,58 @@
 #include <Metro.h> // Include Metro library
 
-// define mode switch (installation vs performance modes)
+// Define mode switch (installation vs performance modes)
 const int modePin = 53;
 int modeState = HIGH;
 
-// define sensor mode switch
+// Define sensor mode switch
 const int sensormodePin = 52;
 int sensormodeState = HIGH;
 
-// define sensor
+// Define sensor
 const int sensorPin = A0;    
 int sensorValue = 0; 
 int sensorMapped = 0; 
 
-// define motors and LEDs (*15)
-const int motor0 = 13; //define led pin
+// Define motors pins (*15)
+const int motor0 = 13;
 
-//define toggles (*15)
+// Define toggles (*15)
 const int toggle0Pin = 22;
 int toggle0State = HIGH;
 
-// define ideal pwm level
+// Hold the motor states (*15)
+int motor0State = pwm;
+
+// Set the active interval (*15)
+int t0 = 185;
+int t1 = 300;
+
+// Set the rest interval (*15)
+// Make the differences between these proportional to their active interval
+int t0rest = 365; 
+
+// Instatiate metro object  (*15)
+Metro metro0 = Metro(t0); 
+//Metro metro1 = Metro(t1); 
+
+// Set ideal pwm level
 int off = 0;
 int pwm = 255;
 int on = 255;
 
-// Create variables to hold the motor-LED states
-int motor0State = pwm;
-
-// Set the active interval
-int t0 = 185;
-int t1 = 300;
-
-// Set the rest interval. Make the differences between these proportional to their active interval
-int t0rest = 365; 
-
-// instatiate metro object
-Metro metro0 = Metro(t0); 
-//Metro metro1 = Metro(t1); 
-
-//////// all installation stuff ////////
-////////////////////////////////////////
+///////////////////////////////////////
+//////// installation settings ////////
+///////////////////////////////////////
 
 // counter variables (*15)
 int counter0 = 0;
-// how many times to do pattern before it reevaluates itself.
+
+// how many times to do pattern before it reevaluates itself (way arbitrary)
 int unit = 23;
 
-//product factors for isntallation
-int installationgp = 20;
-int installationrest = 6;
+// installation time multiplier
+int installationgp = 20;  // grand pause (*trest)
+int installationrest = 6; // pause (*trest)
 
 void setup()
 {
@@ -64,12 +67,14 @@ void loop() {
   motorcontrol(metro0, motor0, motor0State, t0, t0rest, toggle0Pin, toggle0State);  
 }
 
+//////////////////////////////////
+//////// Custom Functions ////////
+//////////////////////////////////
 
-//////// Functions Land ////////
-////////////////////////////////
-
-// what's left to build:
+// what's left:
 // -- potentiometer control of pwm value
+// -- set t and trest times for all motors
+// -- make installation part more fun
 
 //  motorcontrol(metro0, motor0, motor0State, t0, t0rest, toggle0Pin, toggle0State);
 void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, int togglePin, int toggleState) {
@@ -128,24 +133,27 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
           analogWrite(motor,motorState);
         }
       } // end toggle state high
-      
+    // end performance mode
     } else {
       // installation mode (performance mode off)
       
       pwm = 90;
       
-      if( counter0 % unit == 0 ) { // modulo needs to be double the number wanted
+      if( counter0 % unit == 0 ) {
+        // do something special
         int rand0 = random(0,2);
         if (rand0 == 0) {
           motorState=off;
-          metro.interval(trest*installationgp);
+          metro.interval(trest*installationgp); // big ass pause
         } else if (rand0 == 1) {
           motorState=pwm;
-          metro.interval(trest*installationgp);       
+          metro.interval(trest*installationgp); // big ass sustain      
         }      
         analogWrite(motor,motorState);     
       } 
       else {
+        // do something normal -- occasional chirps
+        // make this fancier
         if (motorState > off)  { 
           motorState=off;
           metro.interval(trest*installationrest); // rest between chirps
@@ -160,96 +168,4 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
     } // end mode check
   } // end metro check
   
-}
-
-// NO FUNCTION KEEP THIS CLEAN
-//void loop() {
-//
-//  if (metro0.check() == 1) { // check if the metro has passed its interval
-//    
-//     modeState = digitalRead(modePin);
-//    
-//    if( modeState == HIGH ) {
-//      // Performance Mode ON
-//      
-//      pwm = 255;
-//      sensormodeState = digitalRead(sensormodePin);
-//      sensorValue = analogRead(sensorPin);
-//      toggle0State = digitalRead(toggle0Pin);  
-//         
-//      if( toggle0State == LOW ) {
-//        state0=off;
-//        analogWrite(LED0,state0);
-//      } 
-//      
-//      if( toggle0State == HIGH ) {
-//        if(sensorValue > 0) {
-//          if(sensormodeState == HIGH ) {
-//          // sensor on fast mode
-//            // make it go faster
-//            sensorMapped = map(sensorValue, 0, 1000, 1, 12);
-//            if (state0==pwm)  { 
-//              state0=off;
-//              metro0.interval(t0rest/sensorMapped); // rest between chirps
-//            } else {
-//              state0=pwm;
-//              metro0.interval(t0); // original chirp speed
-//            }
-//            analogWrite(LED0,state0);
-//          } else {
-//            // sensor on slow mode
-//            // make it go slower
-//            sensorMapped = map(sensorValue, 0, 1000, 1, 6);
-//            if (state0==pwm)  { 
-//              state0=off;
-//              metro0.interval(t0rest*sensorMapped); // rest between chirps
-//            } else {
-//              state0=pwm;
-//              metro0.interval(t0); // original chirp speed
-//            }
-//            analogWrite(LED0,state0);            
-//          }
-//        } else {      
-//          if (state0==pwm)  { 
-//            state0=off;
-//            metro0.interval(t0rest); // rest between chirps
-//          } else {
-//            state0=pwm;
-//            metro0.interval(t0); // original chirp speed
-//          }
-//          analogWrite(LED0,state0);
-//        }
-//      } // end button state high
-//      
-//    } else {
-//      // installation mode (performance mode off)
-//      
-//      pwm = 90;
-//      
-//      if( counter0 % unit == 0 ) { // modulo needs to be double the number wanted
-//        int rand0 = random(0,2);
-//        if (rand0 == 0) {
-//          state0=off;
-//          metro0.interval(t0rest*installationgp);
-//        } else if (rand0 == 1) {
-//          state0=pwm;
-//          metro0.interval(t0rest*installationgp);       
-//        }      
-//        analogWrite(LED0,state0);     
-//      } 
-//      else {
-//        if (state0 > off)  { 
-//          state0=off;
-//          metro0.interval(t0rest*installationrest); // rest between chirps
-//        } else {
-//          state0=on;
-//          metro0.interval(t0); // original chirp speed
-//        }
-//        analogWrite(LED0,state0);
-//      }
-//      counter0 = counter0+1;
-//       
-//    } // end mode check
-//  } // end metro check
-//  
-//}
+} // end of motorcontrol function
