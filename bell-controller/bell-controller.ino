@@ -16,8 +16,8 @@ int sensorMapped = 0;
 // scaled according to this help topic:
 // http://forum.arduino.cc/index.php?topic=145443.0
 
-// Define knobs
-const int knob0Pin = A1;    
+// Define knobs (left to right)
+const int knob0Pin = A2;    
 unsigned long knob0Value = 0; 
 int knob0Mapped = 0; 
 
@@ -25,7 +25,7 @@ const int knob1Pin = A3;
 unsigned long knob1Value = 0; 
 int knob1Mapped = 0; 
 
-const int knob2Pin = A2;    
+const int knob2Pin = A1;    
 unsigned long knob2Value = 0; 
 int knob2Mapped = 0; 
 
@@ -175,14 +175,14 @@ int counter13 = 1;
 int counter14 = 1;
 
 // how many times to do pattern before it reevaluates itself (way arbitrary)
-int unit0 = 23;
-int unit1 = 29;
-int unit2 = 20;
-int unit3 = 16;
-int unit4 = 10;
+int unit0 = 13;
+int unit1 = 9;
+int unit2 = 10;
+int unit3 = 7;
+int unit4 = 16;
 
 // installation time multiplier
-int installationgp = 42;  // grand pause (*trest)
+int installationgp = 30;  // grand pause (*trest)
 int installationrest = 14; // pause (*trest)
 
 void setup()
@@ -239,33 +239,41 @@ void loop() {
 //  motorcontrol(metro0, motor0, motor0State, t0, t0rest, toggle0Pin, toggle0State, counter0);
 void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, int togglePin, int toggleState, int counter, int unit) {
   if (metro.check() == 1) { // check if the metro has passed its interval
-    
-     modeState = digitalRead(modePin);
-    
+
+    // see if installation of performance mode
+    modeState = digitalRead(modePin);
+
+    // use third knob to control motor strength (pwm)
+    knob2Value = 1023 - analogRead(knob2Pin); // invert because hooked up backwards
+    knob2Value = knob2Value * knob2Value;
+    knob2Value = knob2Value / 1309; // "ease in-out"
+    knob2Mapped = map(knob2Value, 0, 799, 0, 255);
+    pwm = knob2Mapped;    
+
+
+    // to turn motors on/off in either mode
+    toggleState = digitalRead(togglePin); 
+
     if( modeState == HIGH ) { // Performance Mode ON
       
-      pwm = 255; // full strength
+      // use first knob to control note-on length (t)
+      knob0Value = 1023 - analogRead(knob0Pin); // invert because hooked up backwards
+      knob0Mapped = map(knob0Value, 0, 1023, 1, 7);
+      t = t*knob0Mapped;
+      
+       // use second knob to control not-off length (trest)
+      knob1Value = 1023 - analogRead(knob1Pin); // invert because hooked up backwards
+      knob1Mapped = map(knob1Value, 0, 1023, 1, 15);
+      trest = trest*knob1Mapped;
 
-      knob0Value = analogRead(knob0Pin);
-      knob0Value = knob0Value * knob0Value;
-      knob0Value = knob0Value / 1309;
-      knob0Mapped = map(knob0Value, 0, 799, 0, 255);
-      pwm = knob0Mapped;
-
-      knob1Value = analogRead(knob1Pin);
-      knob1Mapped = map(knob1Value, 0, 1023, 1, 7);
-      t = t*knob1Mapped;
-
-      knob2Value = analogRead(knob2Pin);
-      knob2Mapped = map(knob2Value, 0, 1023, 1, 15);
-      trest = trest*knob2Mapped;
-            
+      // FSR sensor to control overall speed with fast/slow modes
       sensormodeState = digitalRead(sensormodePin);
       sensorValue = analogRead(sensorPin);
       sensorValue = sensorValue * sensorValue;
-      sensorValue = sensorValue / 1309; // "parabolic"
-      
-      toggleState = digitalRead(togglePin);  
+      sensorValue = sensorValue / 1309; // "ease in-out"
+
+      // to turn motors on/off
+      //toggleState = digitalRead(togglePin);  
          
       if( toggleState == LOW ) {
         motorState=off;
@@ -315,14 +323,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
     // end performance mode
     } else {
       // INSTALLATION MODE (performance mode off)
-
-      // set installation settings
-      
-      pwm = 70;
-      knob0Value = analogRead(knob0Pin);
-      knob0Mapped = map(knob0Value, 0, 1023, 0, 255);
-      pwm = knob0Mapped;
-      
+      // installation settings
       t0 =  105;
       t1 =  110;
       t2 =  115;
@@ -339,7 +340,8 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
       t13 = 110;
       t14 = 115;
 
-      toggleState = digitalRead(togglePin);  
+      // ability to turn motors on/off in installation mode
+      //toggleState = digitalRead(togglePin);  
 
       if( toggleState == HIGH ) {
         // motor on
