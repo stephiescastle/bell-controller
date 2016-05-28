@@ -261,7 +261,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
       knob0Mapped = map(knob0Value, 0, 1023, 1, 7);
       t = t*knob0Mapped;
       
-       // use second knob to control not-off length (trest)
+      // use second knob to control not-off length (trest)
       knob1Value = 1023 - analogRead(knob1Pin); // invert because hooked up backwards
       knob1Mapped = map(knob1Value, 0, 1023, 1, 15);
       trest = trest*knob1Mapped;
@@ -340,7 +340,14 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
       t13 = 110;
       t14 = 115;
 
+      // use second knob to control not-off length (trest)
+      // if decide to keep this, then move to parent statement.
+      knob1Value = 1023 - analogRead(knob1Pin); // invert because hooked up backwards
+      knob1Mapped = map(knob1Value, 0, 1023, 1, 15);
+      trest = trest*knob1Mapped;
+      
       // ability to turn motors on/off in installation mode
+      // use this in both modes so moved it to parent if statement
       //toggleState = digitalRead(togglePin);  
 
       if( toggleState == HIGH ) {
