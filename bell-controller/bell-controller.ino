@@ -33,6 +33,7 @@ int knob2Mapped = 0;
 // Set ideal pwm level
 int off = 0;
 int pwm = 255;
+int pwmgp = 45;
 int on = 255;
 
 // Define motors pins (*15)
@@ -103,21 +104,21 @@ int toggle13State = HIGH;
 int toggle14State = HIGH;
 
 // Set the active interval (*15)
-int t0 =  225;
-int t1 =  230;
-int t2 =  235;
+int t0 =  285;
+int t1 =  290;
+int t2 =  295;
 int t3 =  185;
 int t4 =  190;
 int t5 =  195;
 int t6 =  385;
 int t7 =  390;
 int t8 =  395;
-int t9 =  85;
-int t10 = 90;
-int t11 = 95;
-int t12 = 285;
-int t13 = 290;
-int t14 = 295;
+int t9 =  125;
+int t10 = 130;
+int t11 = 135;
+int t12 = 325;
+int t13 = 330;
+int t14 = 335;
 
 // Set the rest interval (*15)
 int t0rest =  215; 
@@ -237,7 +238,7 @@ void loop() {
 // -- installation mode: maybe take out the pause vs sustain thing...
 
 //  motorcontrol(metro0, motor0, motor0State, t0, t0rest, toggle0Pin, toggle0State, counter0);
-void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, int togglePin, int toggleState, int counter, int unit) {
+void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, int togglePin, int toggleState, int &counter, int unit) {
   if (metro.check() == 1) { // check if the metro has passed its interval
 
     // see if installation of performance mode
@@ -288,7 +289,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
             // make it go faster
             sensorMapped = map(sensorValue, 0, 799, 1, 8);
 
-            if (motorState==pwm)  { 
+            if (motorState != off)  { 
               motorState=off;
               metro.interval(trest/sensorMapped); // rest between chirps
             } else {
@@ -300,7 +301,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
             // sensor on slow mode
             // make it go slower
             sensorMapped = map(sensorValue, 0, 799, 1, 30);
-            if (motorState==pwm)  { 
+            if (motorState != off)  { 
               motorState=off;
               metro.interval(trest*sensorMapped); // rest between chirps
             } else {
@@ -310,7 +311,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
             analogWrite(motor,motorState);            
           } // end if sensor in use
         } else { // no sensor
-          if (motorState==pwm)  { 
+          if (motorState != off)  { 
             motorState=off;
             metro.interval(trest); // rest between chirps
           } else {
@@ -358,15 +359,15 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
           if (randomize == 0) { // can either do a sustain or a pause
             motorState=off;
             metro.interval(trest*installationgp); // big ass pause
-          } else if (randomize == 1) {
-            motorState=pwm;
-            metro.interval(trest*installationgp); // big ass sustain      
+          } else {
+            motorState=pwmgp;
+            metro.interval(trest*installationgp); // t*installationgp // big ass sustain      
           }      
           analogWrite(motor,motorState);     
         } else {
           // do something normal -- chirps
           // make this fancier
-          if (motorState > off)  { 
+          if (motorState != off)  { 
             motorState=off;
             metro.interval(trest*installationrest); // rest between chirps
           } else {
