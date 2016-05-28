@@ -259,11 +259,15 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
       
       // use first knob to control note-on length (t)
       knob0Value = 1023 - analogRead(knob0Pin); // invert because hooked up backwards
+      knob0Value = knob0Value * knob0Value;
+      knob0Value = knob0Value / 1309; // "ease in-out"
       knob0Mapped = map(knob0Value, 0, 1023, 1, 7);
       t = t*knob0Mapped;
       
       // use second knob to control not-off length (trest)
       knob1Value = 1023 - analogRead(knob1Pin); // invert because hooked up backwards
+      knob1Value = knob1Value * knob1Value;
+      knob1Value = knob1Value / 1309; // "ease in-out"
       knob1Mapped = map(knob1Value, 0, 1023, 1, 15);
       trest = trest*knob1Mapped;
 
