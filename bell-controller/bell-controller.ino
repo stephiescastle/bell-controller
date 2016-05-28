@@ -16,6 +16,20 @@ int sensorMapped = 0;
 // scaled according to this help topic:
 // http://forum.arduino.cc/index.php?topic=145443.0
 
+// Define knobs
+const int knob0Pin = A1;    
+unsigned long knob0Value = 0; 
+int knob0Mapped = 0; 
+
+const int knob1Pin = A3;    
+unsigned long knob1Value = 0; 
+int knob1Mapped = 0; 
+
+const int knob2Pin = A2;    
+unsigned long knob2Value = 0; 
+int knob2Mapped = 0; 
+
+
 // Set ideal pwm level
 int off = 0;
 int pwm = 255;
@@ -89,21 +103,21 @@ int toggle13State = HIGH;
 int toggle14State = HIGH;
 
 // Set the active interval (*15)
-int t0 =  685;
-int t1 =  690;
-int t2 =  695;
-int t3 =  285;
-int t4 =  290;
-int t5 =  395;
-int t6 =  585;
-int t7 =  590;
-int t8 =  595;
-int t9 =  185;
-int t10 = 190;
-int t11 = 195;
-int t12 = 385;
-int t13 = 390;
-int t14 = 395;
+int t0 =  225;
+int t1 =  230;
+int t2 =  235;
+int t3 =  185;
+int t4 =  190;
+int t5 =  195;
+int t6 =  385;
+int t7 =  390;
+int t8 =  395;
+int t9 =  85;
+int t10 = 90;
+int t11 = 95;
+int t12 = 285;
+int t13 = 290;
+int t14 = 295;
 
 // Set the rest interval (*15)
 int t0rest =  215; 
@@ -118,9 +132,9 @@ int t8rest =  155;
 int t9rest =  95; 
 int t10rest = 100; 
 int t11rest = 105; 
-int t12rest = 75; 
-int t13rest = 80; 
-int t14rest = 85; 
+int t12rest = 85; 
+int t13rest = 90; 
+int t14rest = 95; 
 
 // Instatiate metro object  (*15)
 Metro metro0 =  Metro(t0); 
@@ -219,6 +233,8 @@ void loop() {
 // -- potentiometer control of pwm value
 // -- set t and trest times for all motors
 // -- make installation part more fun
+// -- make performance part better and figure it out
+// -- installation mode: maybe take out the pause vs sustain thing...
 
 //  motorcontrol(metro0, motor0, motor0State, t0, t0rest, toggle0Pin, toggle0State, counter0);
 void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, int togglePin, int toggleState, int counter, int unit) {
@@ -229,7 +245,21 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
     if( modeState == HIGH ) { // Performance Mode ON
       
       pwm = 255; // full strength
-      
+
+      knob0Value = analogRead(knob0Pin);
+      knob0Value = knob0Value * knob0Value;
+      knob0Value = knob0Value / 1309;
+      knob0Mapped = map(knob0Value, 0, 799, 0, 255);
+      pwm = knob0Mapped;
+
+      knob1Value = analogRead(knob1Pin);
+      knob1Mapped = map(knob1Value, 0, 1023, 1, 7);
+      t = t*knob1Mapped;
+
+      knob2Value = analogRead(knob2Pin);
+      knob2Mapped = map(knob2Value, 0, 1023, 1, 15);
+      trest = trest*knob2Mapped;
+            
       sensormodeState = digitalRead(sensormodePin);
       sensorValue = analogRead(sensorPin);
       sensorValue = sensorValue * sensorValue;
@@ -243,11 +273,13 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
       } 
       
       if( toggleState == HIGH ) {
+
         if(sensorValue > 0) {
           if(sensormodeState == HIGH ) {
           // sensor on fast mode
             // make it go faster
             sensorMapped = map(sensorValue, 0, 799, 1, 8);
+
             if (motorState==pwm)  { 
               motorState=off;
               metro.interval(trest/sensorMapped); // rest between chirps
@@ -287,7 +319,10 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
       // set installation settings
       
       pwm = 70;
-
+      knob0Value = analogRead(knob0Pin);
+      knob0Mapped = map(knob0Value, 0, 1023, 0, 255);
+      pwm = knob0Mapped;
+      
       t0 =  105;
       t1 =  110;
       t2 =  115;
