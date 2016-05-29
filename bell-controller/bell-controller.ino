@@ -12,22 +12,22 @@ int sensormodeState = HIGH;
 // Define sensor
 const int sensorPin = A0;    
 unsigned long sensorValue = 0; 
-int sensorMapped = 0; 
+float sensorMapped = 0; 
 // scaled according to this help topic:
 // http://forum.arduino.cc/index.php?topic=145443.0
 
 // Define knobs (left to right)
 const int knob0Pin = A2;    
 unsigned long knob0Value = 0; 
-int knob0Mapped = 0; 
+float knob0Mapped = 0; 
 
 const int knob1Pin = A3;    
 unsigned long knob1Value = 0; 
-int knob1Mapped = 0; 
+float knob1Mapped = 0; 
 
 const int knob2Pin = A1;    
 unsigned long knob2Value = 0; 
-int knob2Mapped = 0; 
+float knob2Mapped = 0; 
 
 
 // Set ideal pwm level
@@ -104,38 +104,38 @@ int toggle13State = HIGH;
 int toggle14State = HIGH;
 
 // Set the active interval (*15)
-int t0 =  285;
-int t1 =  290;
-int t2 =  295;
-int t3 =  185;
-int t4 =  190;
-int t5 =  195;
-int t6 =  385;
-int t7 =  390;
-int t8 =  395;
-int t9 =  125;
-int t10 = 130;
-int t11 = 135;
-int t12 = 325;
-int t13 = 330;
-int t14 = 335;
+float t0 =  285;
+float t1 =  290;
+float t2 =  295;
+float t3 =  185;
+float t4 =  190;
+float t5 =  195;
+float t6 =  385;
+float t7 =  390;
+float t8 =  395;
+float t9 =  125;
+float t10 = 130;
+float t11 = 135;
+float t12 = 325;
+float t13 = 330;
+float t14 = 335;
 
 // Set the rest interval (*15)
-int t0rest =  215; 
-int t1rest =  220; 
-int t2rest =  225; 
-int t3rest =  125; 
-int t4rest =  130; 
-int t5rest =  135; 
-int t6rest =  145; 
-int t7rest =  150; 
-int t8rest =  155; 
-int t9rest =  95; 
-int t10rest = 100; 
-int t11rest = 105; 
-int t12rest = 85; 
-int t13rest = 90; 
-int t14rest = 95; 
+float t0rest =  215; 
+float t1rest =  220; 
+float t2rest =  225; 
+float t3rest =  125; 
+float t4rest =  130; 
+float t5rest =  135; 
+float t6rest =  145; 
+float t7rest =  150; 
+float t8rest =  155; 
+float t9rest =  95; 
+float t10rest = 100; 
+float t11rest = 105; 
+float t12rest = 85; 
+float t13rest = 90; 
+float t14rest = 95; 
 
 // Instatiate metro object  (*15)
 Metro metro0 =  Metro(t0); 
@@ -188,7 +188,6 @@ int installationrest = 14; // pause (*trest)
 
 void setup()
 {
-  // don't need to decalre input pins
   // declare output pins
   pinMode(motor0,OUTPUT);
   pinMode(motor1,OUTPUT);
@@ -238,7 +237,7 @@ void loop() {
 // -- installation mode: maybe take out the pause vs sustain thing...
 
 //  motorcontrol(metro0, motor0, motor0State, t0, t0rest, toggle0Pin, toggle0State, counter0);
-void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, int togglePin, int toggleState, int &counter, int unit) {
+void motorcontrol(Metro& metro, int motor, int &motorState, float t, float trest, int togglePin, int toggleState, int &counter, int unit) {
   if (metro.check() == 1) { // check if the metro has passed its interval
 
     // see if installation of performance mode
@@ -251,6 +250,12 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
     knob2Mapped = map(knob2Value, 0, 799, 0, 255);
     pwm = knob2Mapped;    
 
+    // use second knob to control note-off length (trest)
+    knob1Value = 1023 - analogRead(knob1Pin); // invert because hooked up backwards
+    knob1Value = knob1Value * knob1Value;
+    knob1Value = knob1Value / 1309; // "ease in-out"
+    knob1Mapped = mapf(knob1Value, 0, 1023, 1, 15);
+    trest = trest*knob1Mapped;
 
     // to turn motors on/off in either mode
     toggleState = digitalRead(togglePin); 
@@ -259,17 +264,8 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
       
       // use first knob to control note-on length (t)
       knob0Value = 1023 - analogRead(knob0Pin); // invert because hooked up backwards
-      knob0Value = knob0Value * knob0Value;
-      knob0Value = knob0Value / 1309; // "ease in-out"
-      knob0Mapped = map(knob0Value, 0, 1023, 1, 7);
+      knob0Mapped = mapf(knob0Value, 0, 1023, 1, 8);
       t = t*knob0Mapped;
-      
-      // use second knob to control not-off length (trest)
-      knob1Value = 1023 - analogRead(knob1Pin); // invert because hooked up backwards
-      knob1Value = knob1Value * knob1Value;
-      knob1Value = knob1Value / 1309; // "ease in-out"
-      knob1Mapped = map(knob1Value, 0, 1023, 1, 15);
-      trest = trest*knob1Mapped;
 
       // FSR sensor to control overall speed with fast/slow modes
       sensormodeState = digitalRead(sensormodePin);
@@ -291,7 +287,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
           if(sensormodeState == HIGH ) {
           // sensor on fast mode
             // make it go faster
-            sensorMapped = map(sensorValue, 0, 799, 1, 8);
+            sensorMapped = mapf(sensorValue, 0, 799, 1, 8);
 
             if (motorState != off)  { 
               motorState=off;
@@ -304,7 +300,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
           } else {
             // sensor on slow mode
             // make it go slower
-            sensorMapped = map(sensorValue, 0, 799, 1, 30);
+            sensorMapped = mapf(sensorValue, 0, 799, 1, 30);
             if (motorState != off)  { 
               motorState=off;
               metro.interval(trest*sensorMapped); // rest between chirps
@@ -344,16 +340,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
       t12 = 105;
       t13 = 110;
       t14 = 115;
-
-      // use second knob to control not-off length (trest)
-      // if decide to keep this, then move to parent statement.
-      knob1Value = 1023 - analogRead(knob1Pin); // invert because hooked up backwards
-      knob1Mapped = map(knob1Value, 0, 1023, 1, 15);
-      trest = trest*knob1Mapped;
-      
-      // ability to turn motors on/off in installation mode
-      // use this in both modes so moved it to parent if statement
-      //toggleState = digitalRead(togglePin);  
+      // trest determined by knob2
 
       if( toggleState == HIGH ) {
         // motor on
@@ -386,3 +373,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, int t, int trest, in
   } // end metro check
   
 } // end of motorcontrol function
+
+float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
+ return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
