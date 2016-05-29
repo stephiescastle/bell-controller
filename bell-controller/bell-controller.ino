@@ -33,7 +33,7 @@ float knob2Mapped = 0;
 // Set ideal pwm level
 int off = 0;
 int pwm = 255;
-int pwmgp = 45;
+int pwmgp = 55;
 int on = 255;
 
 // Define motors pins (*15)
@@ -178,8 +178,8 @@ int counter14 = 1;
 // how many times to do pattern before it reevaluates itself (way arbitrary)
 int unit0 = 13;
 int unit1 = 9;
-int unit2 = 10;
-int unit3 = 7;
+int unit2 = 7;
+int unit3 = 11;
 int unit4 = 16;
 
 // installation time multiplier
@@ -341,7 +341,13 @@ void motorcontrol(Metro& metro, int motor, int &motorState, float t, float trest
       t13 = 110;
       t14 = 115;
       // trest determined by knob2
-
+      
+      // to turn motors on/off
+      //toggleState = digitalRead(togglePin);
+      if( toggleState == LOW ) {
+        motorState=off;
+        analogWrite(motor,motorState);
+      } 
       if( toggleState == HIGH ) {
         // motor on
         if( counter % unit == 0 ) {
@@ -368,7 +374,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, float t, float trest
           analogWrite(motor,motorState);
         }
         counter = counter+1;
-      } else {} // end togglestate check 
+      } // end togglestate check 
     } // end mode check
   } // end metro check
   
