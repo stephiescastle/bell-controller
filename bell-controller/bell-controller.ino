@@ -33,7 +33,7 @@ float knob2Mapped = 0;
 // Set ideal pwm level
 int off = 0;
 int pwm = 255;
-int pwmgp = 55;
+int pwmgp = 60;
 int on = 255;
 
 // Define motors pins (*15)
