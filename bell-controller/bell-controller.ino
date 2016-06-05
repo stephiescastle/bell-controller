@@ -176,11 +176,11 @@ int counter13 = 1;
 int counter14 = 1;
 
 // how many times to do pattern before it reevaluates itself (way arbitrary)
-int unit0 = 13;
-int unit1 = 9;
-int unit2 = 7;
-int unit3 = 11;
-int unit4 = 16;
+int unit0 = 9;
+int unit1 = 5;
+int unit2 = 3;
+int unit3 = 7;
+int unit4 = 12;
 
 // installation time multiplier
 int installationgp = 30;  // grand pause (*trest)
@@ -230,11 +230,7 @@ void loop() {
 //////////////////////////////////
 
 // what's left:
-// -- potentiometer control of pwm value
-// -- set t and trest times for all motors
-// -- make installation part more fun
-// -- make performance part better and figure it out
-// -- installation mode: maybe take out the pause vs sustain thing...
+// -- bug pwm in installation mode (when changing, it resets all time resulting in big quiet gap)
 
 //  motorcontrol(metro0, motor0, motor0State, t0, t0rest, toggle0Pin, toggle0State, counter0);
 void motorcontrol(Metro& metro, int motor, int &motorState, float t, float trest, int togglePin, int toggleState, int &counter, int unit) {
@@ -272,9 +268,6 @@ void motorcontrol(Metro& metro, int motor, int &motorState, float t, float trest
       sensorValue = analogRead(sensorPin);
       sensorValue = sensorValue * sensorValue;
       sensorValue = sensorValue / 1309; // "ease in-out"
-
-      // to turn motors on/off
-      //toggleState = digitalRead(togglePin);  
          
       if( toggleState == LOW ) {
         motorState=off;
@@ -282,7 +275,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, float t, float trest
       } 
       
       if( toggleState == HIGH ) {
-
+ 
         if(sensorValue > 0) {
           if(sensormodeState == HIGH ) {
           // sensor on fast mode
@@ -322,7 +315,8 @@ void motorcontrol(Metro& metro, int motor, int &motorState, float t, float trest
         }
       } // end toggle state high
     // end performance mode
-    } else {
+    } 
+    if( modeState == LOW ) {
       // INSTALLATION MODE (performance mode off)
       // installation settings
       t0 =  105;
@@ -342,13 +336,12 @@ void motorcontrol(Metro& metro, int motor, int &motorState, float t, float trest
       t14 = 115;
       // trest determined by knob2
       
-      // to turn motors on/off
-      //toggleState = digitalRead(togglePin);
       if( toggleState == LOW ) {
         motorState=off;
         analogWrite(motor,motorState);
       } 
       if( toggleState == HIGH ) {
+ 
         // motor on
         if( counter % unit == 0 ) {
           // do something special
