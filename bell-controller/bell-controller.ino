@@ -1,5 +1,5 @@
 #include <Metro.h> // Include Metro library
-#include <math.h> // for logarithmic scaling
+#include <math.h> // for math
 
 // Define mode switch (installation vs performance modes)
 const int modePin = 53;
@@ -68,7 +68,6 @@ int motor11State = pwm;
 int motor12State = pwm;
 int motor13State = pwm;
 int motor14State = pwm;
-
 
 // Define toggles (*15)
 const int toggle0Pin =  22;
@@ -229,10 +228,10 @@ void loop() {
 //////// Custom Functions ////////
 //////////////////////////////////
 
-// what's left:
-// -- bug pwm in installation mode (when changing, it resets all time resulting in big quiet gap)
+// Motor Control
+// usage example:
+// motorcontrol(metro0, motor0, motor0State, t0, t0rest, toggle0Pin, toggle0State, counter0, unit0);
 
-//  motorcontrol(metro0, motor0, motor0State, t0, t0rest, toggle0Pin, toggle0State, counter0);
 void motorcontrol(Metro& metro, int motor, int &motorState, float t, float trest, int togglePin, int toggleState, int &counter, int unit) {
   if (metro.check() == 1) { // check if the metro has passed its interval
 
@@ -373,6 +372,7 @@ void motorcontrol(Metro& metro, int motor, int &motorState, float t, float trest
   
 } // end of motorcontrol function
 
+// Map floats
 float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
